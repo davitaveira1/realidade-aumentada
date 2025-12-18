@@ -12,12 +12,17 @@
   <style>
     body { margin:0; overflow:hidden; }
     #startAR { position:fixed; z-index:10; bottom:20px; left:50%; transform:translateX(-50%);
-               padding:12px 20px; font-size:16px; }
+               padding:12px 20px; font-size:18px; background:#4CAF50; color:white; 
+               border:none; border-radius:8px; cursor:pointer; }
+    #startAR:active { background:#45a049; }
+    #status { position:fixed; z-index:10; top:10px; left:10px; color:white; 
+              background:rgba(0,0,0,0.7); padding:8px; border-radius:4px; font-size:14px; }
   </style>
 </head>
 
 <body>
 
+<div id="status">Aguardando...</div>
 <button id="startAR">Iniciar AR</button>
 
 <a-scene
@@ -25,43 +30,67 @@
   embedded
   vr-mode-ui="enabled:false"
   device-orientation-permission-ui="enabled:false"
-  renderer="precision: mediump"
-  mindar-image="imageTargetSrc: assets/targets.mind; uiScanning: yes; uiLoading: yes;">
+  renderer="logarithmicDepthBuffer: true; precision: medium;"
+  mindar-image="imageTargetSrc: assets/targets.mind; autoStart: false; uiScanning: yes; uiLoading: yes;">
+
+  <a-assets>
+    <a-asset-item id="heart" src="assets/heart.glb"></a-asset-item>
+  </a-assets>
 
   <a-camera
     position="0 0 0"
-    look-controls="enabled:false"
-    camera="facingMode: environment">
+    look-controls="enabled:false">
   </a-camera>
+
+  <!-- Target 0: o modelo aparece quando detectar a imagem -->
+  <a-entity mindar-image-target="targetIndex: 0">
+    <a-gltf-model src="#heart" position="0 0 0" scale="0.2 0.2 0.2" rotation="0 0 0"></a-gltf-model>
+  </a-entity>
 
 </a-scene>
 
 <script>
   const button = document.getElementById('startAR');
   const sceneEl = document.getElementById('scene');
+  const status = document.getElementById('status');
 
-  // Log básico pra você saber se carregou
-  sceneEl.addEventListener('loaded', () => console.log('[A-Frame] scene loaded'));
+  function log(msg) {
+    console.log(msg);
+    status.textContent = msg;
+  }
+
+  // Verifica HTTPS (obrigatório para câmera no celular)
+  if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+    log('⚠️ HTTPS necessário para câmera!');
+  }
+
+  sceneEl.addEventListener('loaded', () => log('✅ Cena carregada'));
+  
+  sceneEl.addEventListener('arReady', () => log('✅ AR Pronto'));
+  sceneEl.addEventListener('arError', (e) => log('❌ Erro AR: ' + e.detail));
 
   button.addEventListener('click', async () => {
-    button.style.display = 'none';
+    button.disabled = true;
+    button.textContent = 'Carregando...';
+    log('🔄 Iniciando câmera...');
 
     try {
       const mindarSystem = sceneEl.systems["mindar-image-system"];
+      
       if (!mindarSystem) {
-        console.log('[MindAR] system not found');
+        log('❌ Sistema MindAR não encontrado');
         return;
       }
 
-      console.log('[MindAR] starting...');
-      await mindarSystem.start();              // <- FORÇA START NO MOBILE
-      console.log('[MindAR] started');
-
-      // garante que o render está rodando
-      sceneEl.play();
+      await mindarSystem.start();
+      log('✅ AR iniciado! Aponte para o alvo.');
+      button.style.display = 'none';
+      
     } catch (e) {
-      console.log('[MindAR] start error:', e);
-      alert('Erro ao iniciar AR: ' + (e && e.message ? e.message : e));
+      console.error('[MindAR] erro:', e);
+      log('❌ Erro: ' + (e.message || e));
+      button.disabled = false;
+      button.textContent = 'Tentar novamente';
     }
   });
 </script>
