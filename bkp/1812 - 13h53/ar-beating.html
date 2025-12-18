@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>AR - Coração Estático</title>
+  <title>AR - Coração Batendo</title>
   
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
@@ -42,7 +42,7 @@
       transform: translateX(-50%);
       padding: 16px 32px;
       font-size: 18px;
-      background: #ef4444;
+      background: #ec4899;
       color: white;
       border: none;
       border-radius: 10px;
@@ -83,7 +83,7 @@
     .scanner-box {
       width: 250px;
       height: 250px;
-      border: 3px solid rgba(239,68,68,0.8);
+      border: 3px solid rgba(236,72,153,0.8);
       border-radius: 20px;
       position: relative;
     }
@@ -93,7 +93,7 @@
       left: 5%;
       width: 90%;
       height: 2px;
-      background: linear-gradient(90deg, transparent, #ef4444, transparent);
+      background: linear-gradient(90deg, transparent, #ec4899, transparent);
       animation: scan 2s linear infinite;
     }
     
@@ -114,78 +114,41 @@
       white-space: nowrap;
       text-shadow: 0 2px 4px rgba(0,0,0,0.8);
     }
-    
-    /* Controles de zoom */
-    #zoomControls {
-      bottom: 100px;
-      right: 15px;
-      display: none;
-      flex-direction: column;
-      gap: 10px;
-    }
-    
-    #zoomControls.visible {
-      display: flex;
-    }
-    
-    .zoom-btn {
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      border: none;
-      background: rgba(0,0,0,0.6);
-      color: white;
-      font-size: 24px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    
-    .zoom-btn:active {
-      background: rgba(239,68,68,0.8);
-    }
   </style>
 </head>
 
 <body>
   <a href="menu.html" id="backBtn" class="ui-overlay">← Voltar</a>
   <div id="statusBox" class="ui-overlay">Carregando...</div>
-  <button id="startBtn" class="ui-overlay">❤️ Iniciar AR</button>
-  
-  <div id="zoomControls" class="ui-overlay">
-    <button class="zoom-btn" id="zoomIn">+</button>
-    <button class="zoom-btn" id="zoomOut">−</button>
-  </div>
+  <button id="startBtn" class="ui-overlay">💓 Iniciar AR</button>
   
   <div id="scannerOverlay" class="ui-overlay">
     <div class="scanner-box">
       <div class="scanner-line"></div>
-      <div class="scanner-text">Aponte para o QR Code 1</div>
+      <div class="scanner-text">Aponte para o QR Code 2</div>
     </div>
   </div>
 
   <a-scene
     id="arScene"
-    mindar-image="imageTargetSrc: ./assets/targets.mind; autoStart: false; uiLoading: no; uiScanning: no; filterMinCF: 0.0001; filterBeta: 1000; missTolerance: 5; warmupTolerance: 5;"
+    mindar-image="imageTargetSrc: ./assets/targets2.mind; autoStart: false; uiLoading: no; uiScanning: no; filterMinCF: 0.0001; filterBeta: 1000; missTolerance: 5; warmupTolerance: 5;"
     color-space="sRGB"
     renderer="colorManagement: true; physicallyCorrectLights: true;"
     vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false">
     
     <a-assets>
-      <a-asset-item id="heartModel" src="./assets/heart.glb"></a-asset-item>
+      <a-asset-item id="beatingModel" src="./assets/Beating_heart.glb"></a-asset-item>
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
     <a-entity mindar-image-target="targetIndex: 0">
       <a-gltf-model 
-        src="#heartModel" 
+        src="#beatingModel" 
         position="0 0 0" 
-        scale="0.5 0.5 0.5"
-        rotation="0 0 0"
-        animation="property: rotation; to: 0 360 0; loop: true; dur: 5000; easing: linear;">
+        scale="5 5 5"
+        rotation="0 0 0">
       </a-gltf-model>
     </a-entity>
   </a-scene>
@@ -253,37 +216,17 @@
         log('✅ AR iniciado!');
         startBtn.style.display = 'none';
         showScanner(true);
-        zoomControls.classList.add('visible');
         
       } catch (err) {
         console.error(err);
         log('❌ Erro: ' + (err.message || err));
         startBtn.disabled = false;
-        startBtn.textContent = '❤️ Tentar novamente';
+        startBtn.textContent = '💓 Tentar novamente';
       }
     });
     
     log('📱 Página carregada');
     log('✅ HTTPS: ' + (location.protocol === 'https:'));
-    
-    // Controles de Zoom
-    const zoomControls = document.getElementById('zoomControls');
-    const zoomInBtn = document.getElementById('zoomIn');
-    const zoomOutBtn = document.getElementById('zoomOut');
-    const model = document.querySelector('a-gltf-model');
-    let currentScale = 0.5;
-    
-    zoomInBtn.addEventListener('click', () => {
-      currentScale = Math.min(currentScale + 0.2, 3);
-      model.setAttribute('scale', `${currentScale} ${currentScale} ${currentScale}`);
-      log(`🔍 Zoom: ${(currentScale * 100).toFixed(0)}%`);
-    });
-    
-    zoomOutBtn.addEventListener('click', () => {
-      currentScale = Math.max(currentScale - 0.2, 0.1);
-      model.setAttribute('scale', `${currentScale} ${currentScale} ${currentScale}`);
-      log(`🔍 Zoom: ${(currentScale * 100).toFixed(0)}%`);
-    });
   </script>
 </body>
 </html>

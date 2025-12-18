@@ -114,6 +114,37 @@
       white-space: nowrap;
       text-shadow: 0 2px 4px rgba(0,0,0,0.8);
     }
+    
+    /* Controles de zoom */
+    #zoomControls {
+      bottom: 100px;
+      right: 15px;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    #zoomControls.visible {
+      display: flex;
+    }
+    
+    .zoom-btn {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(0,0,0,0.6);
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .zoom-btn:active {
+      background: rgba(236,72,153,0.8);
+    }
   </style>
 </head>
 
@@ -121,6 +152,11 @@
   <a href="menu.html" id="backBtn" class="ui-overlay">← Voltar</a>
   <div id="statusBox" class="ui-overlay">Carregando...</div>
   <button id="startBtn" class="ui-overlay">💓 Iniciar AR</button>
+  
+  <div id="zoomControls" class="ui-overlay">
+    <button class="zoom-btn" id="zoomIn">+</button>
+    <button class="zoom-btn" id="zoomOut">−</button>
+  </div>
   
   <div id="scannerOverlay" class="ui-overlay">
     <div class="scanner-box">
@@ -216,6 +252,7 @@
         log('✅ AR iniciado!');
         startBtn.style.display = 'none';
         showScanner(true);
+        zoomControls.classList.add('visible');
         
       } catch (err) {
         console.error(err);
@@ -227,6 +264,25 @@
     
     log('📱 Página carregada');
     log('✅ HTTPS: ' + (location.protocol === 'https:'));
+    
+    // Controles de Zoom
+    const zoomControls = document.getElementById('zoomControls');
+    const zoomInBtn = document.getElementById('zoomIn');
+    const zoomOutBtn = document.getElementById('zoomOut');
+    const model = document.querySelector('a-gltf-model');
+    let currentScale = 5;
+    
+    zoomInBtn.addEventListener('click', () => {
+      currentScale = Math.min(currentScale + 1, 15);
+      model.setAttribute('scale', `${currentScale} ${currentScale} ${currentScale}`);
+      log(`🔍 Zoom: ${(currentScale * 20).toFixed(0)}%`);
+    });
+    
+    zoomOutBtn.addEventListener('click', () => {
+      currentScale = Math.max(currentScale - 1, 1);
+      model.setAttribute('scale', `${currentScale} ${currentScale} ${currentScale}`);
+      log(`🔍 Zoom: ${(currentScale * 20).toFixed(0)}%`);
+    });
   </script>
 </body>
 </html>
