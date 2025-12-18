@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>AR - Coração Estático</title>
+  
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+  
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+    
+    .ui-overlay {
+      position: fixed;
+      z-index: 1000;
+    }
+    
+    #backBtn {
+      top: 10px;
+      left: 10px;
+      padding: 10px 16px;
+      font-size: 14px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    #startBtn {
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 16px 32px;
+      font-size: 18px;
+      background: #ef4444;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(239,68,68,0.4);
+    }
+    
+    #statusBox {
+      top: 10px;
+      right: 10px;
+      left: 70px;
+      background: rgba(0,0,0,0.7);
+      color: #0f0;
+      padding: 10px;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 11px;
+      max-height: 80px;
+      overflow-y: auto;
+    }
+    
+    #scannerOverlay {
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      pointer-events: none;
+    }
+    
+    #scannerOverlay.visible {
+      display: flex;
+    }
+    
+    .scanner-box {
+      width: 250px;
+      height: 250px;
+      border: 3px solid rgba(239,68,68,0.8);
+      border-radius: 20px;
+      position: relative;
+      box-shadow: 0 0 0 4000px rgba(0,0,0,0.3);
+    }
+    
+    .scanner-line {
+      position: absolute;
+      left: 5%;
+      width: 90%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #ef4444, transparent);
+      animation: scan 2s linear infinite;
+    }
+    
+    @keyframes scan {
+      0% { top: 10%; }
+      50% { top: 90%; }
+      100% { top: 10%; }
+    }
+    
+    .scanner-text {
+      position: absolute;
+      bottom: -50px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: white;
+      font-size: 14px;
+      text-align: center;
+      white-space: nowrap;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    }
+    
+    .model-name {
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(239,68,68,0.9);
+      color: white;
+      padding: 8px 20px;
+      border-radius: 20px;
+      font-size: 14px;
+      z-index: 1000;
+      display: none;
+    }
+    
+    .model-name.visible {
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+  <a href="menu.html" id="backBtn" class="ui-overlay">← Voltar</a>
+  <div id="statusBox" class="ui-overlay">Carregando...</div>
+  <button id="startBtn" class="ui-overlay">❤️ Iniciar AR</button>
+  <div class="model-name" id="modelName">❤️ Coração Estático</div>
+  
+  <div id="scannerOverlay" class="ui-overlay">
+    <div class="scanner-box">
+      <div class="scanner-line"></div>
+      <div class="scanner-text">Aponte para o QR Code 1</div>
+    </div>
+  </div>
+
+  <a-scene
+    id="arScene"
+    mindar-image="imageTargetSrc: ./assets/targets.mind; autoStart: false; uiLoading: no; uiScanning: no; filterMinCF: 0.0001; filterBeta: 1000; missTolerance: 5; warmupTolerance: 5;"
+    color-space="sRGB"
+    renderer="colorManagement: true; physicallyCorrectLights: true;"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false">
+    
+    <a-assets>
+      <a-asset-item id="model3D" src="./assets/heart.glb"></a-asset-item>
+    </a-assets>
+
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+    <a-entity mindar-image-target="targetIndex: 0">
+      <a-gltf-model 
+        src="#model3D" 
+        position="0 0 0" 
+        scale="0.3 0.3 0.3"
+        rotation="0 0 0"
+        animation="property: rotation; to: 0 360 0; loop: true; dur: 5000; easing: linear;">
+      </a-gltf-model>
+    </a-entity>
+  </a-scene>
+
+  <script>
+    const startBtn = document.getElementById('startBtn');
+    const statusBox = document.getElementById('statusBox');
+    const scannerOverlay = document.getElementById('scannerOverlay');
+    const modelName = document.getElementById('modelName');
+    const arScene = document.getElementById('arScene');
+    
+    let logMessages = [];
+    
+    function log(msg) {
+      console.log(msg);
+      logMessages.push(msg);
+      if (logMessages.length > 5) logMessages.shift();
+      statusBox.innerHTML = logMessages.join('<br>');
+    }
+    
+    function showScanner(show) {
+      scannerOverlay.classList.toggle('visible', show);
+    }
+    
+    arScene.addEventListener('arReady', () => log('✅ AR pronto!'));
+    arScene.addEventListener('arError', () => log('❌ Erro no AR'));
+    
+    arScene.addEventListener('targetFound', () => {
+      log('🎯 Alvo encontrado!');
+      showScanner(false);
+      modelName.classList.add('visible');
+    });
+    
+    arScene.addEventListener('targetLost', () => {
+      log('👀 Alvo perdido');
+      showScanner(true);
+      modelName.classList.remove('visible');
+    });
+    
+    startBtn.addEventListener('click', async () => {
+      startBtn.disabled = true;
+      startBtn.textContent = 'Iniciando...';
+      log('🔄 Solicitando câmera...');
+      
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment' }
+        });
+        stream.getTracks().forEach(t => t.stop());
+        log('✅ Câmera permitida');
+        
+        log('🔄 Iniciando MindAR...');
+        const mindar = arScene.systems['mindar-image-system'];
+        await mindar.start();
+        
+        log('✅ AR iniciado!');
+        startBtn.style.display = 'none';
+        showScanner(true);
+        
+      } catch (err) {
+        console.error(err);
+        log('❌ Erro: ' + (err.message || err));
+        startBtn.disabled = false;
+        startBtn.textContent = '❤️ Tentar novamente';
+      }
+    });
+    
+    log('📱 Página carregada');
+  </script>
+</body>
+</html>
