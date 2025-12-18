@@ -25,16 +25,14 @@
     #backBtn {
       top: 10px;
       left: 10px;
-      padding: 10px 16px;
+      padding: 8px 14px;
       font-size: 14px;
-      background: rgba(0,0,0,0.7);
+      background: rgba(0,0,0,0.6);
       color: white;
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      text-decoration: none;
     }
     
     #startBtn {
@@ -48,23 +46,24 @@
       border: none;
       border-radius: 10px;
       cursor: pointer;
-      box-shadow: 0 4px 15px rgba(236,72,153,0.4);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     }
     
     #statusBox {
       top: 10px;
+      left: 80px;
       right: 10px;
-      left: 70px;
       background: rgba(0,0,0,0.7);
       color: #0f0;
       padding: 10px;
       border-radius: 8px;
       font-family: monospace;
-      font-size: 11px;
-      max-height: 80px;
+      font-size: 12px;
+      max-height: 100px;
       overflow-y: auto;
     }
     
+    /* Scanner overlay */
     #scannerOverlay {
       top: 0;
       left: 0;
@@ -86,7 +85,6 @@
       border: 3px solid rgba(236,72,153,0.8);
       border-radius: 20px;
       position: relative;
-      box-shadow: 0 0 0 4000px rgba(0,0,0,0.3);
     }
     
     .scanner-line {
@@ -115,24 +113,6 @@
       white-space: nowrap;
       text-shadow: 0 2px 4px rgba(0,0,0,0.8);
     }
-    
-    .model-name {
-      position: fixed;
-      bottom: 100px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(236,72,153,0.9);
-      color: white;
-      padding: 8px 20px;
-      border-radius: 20px;
-      font-size: 14px;
-      z-index: 1000;
-      display: none;
-    }
-    
-    .model-name.visible {
-      display: block;
-    }
   </style>
 </head>
 
@@ -140,7 +120,6 @@
   <a href="menu.html" id="backBtn" class="ui-overlay">← Voltar</a>
   <div id="statusBox" class="ui-overlay">Carregando...</div>
   <button id="startBtn" class="ui-overlay">💓 Iniciar AR</button>
-  <div class="model-name" id="modelName">💓 Coração Batendo</div>
   
   <div id="scannerOverlay" class="ui-overlay">
     <div class="scanner-box">
@@ -177,7 +156,6 @@
     const startBtn = document.getElementById('startBtn');
     const statusBox = document.getElementById('statusBox');
     const scannerOverlay = document.getElementById('scannerOverlay');
-    const modelName = document.getElementById('modelName');
     const arScene = document.getElementById('arScene');
     
     let logMessages = [];
@@ -185,7 +163,7 @@
     function log(msg) {
       console.log(msg);
       logMessages.push(msg);
-      if (logMessages.length > 5) logMessages.shift();
+      if (logMessages.length > 6) logMessages.shift();
       statusBox.innerHTML = logMessages.join('<br>');
     }
     
@@ -193,35 +171,45 @@
       scannerOverlay.classList.toggle('visible', show);
     }
     
-    arScene.addEventListener('arReady', () => log('✅ AR pronto!'));
-    arScene.addEventListener('arError', () => log('❌ Erro no AR'));
+    // Eventos
+    arScene.addEventListener('arReady', () => {
+      log('✅ AR pronto!');
+    });
     
+    arScene.addEventListener('arError', () => {
+      log('❌ Erro no AR');
+    });
+    
+    // Quando encontra o alvo
     arScene.addEventListener('targetFound', () => {
       log('🎯 Alvo encontrado!');
       showScanner(false);
-      modelName.classList.add('visible');
     });
     
+    // Quando perde o alvo
     arScene.addEventListener('targetLost', () => {
       log('👀 Alvo perdido');
       showScanner(true);
-      modelName.classList.remove('visible');
     });
     
+    // Botão iniciar
     startBtn.addEventListener('click', async () => {
       startBtn.disabled = true;
       startBtn.textContent = 'Iniciando...';
       log('🔄 Solicitando câmera...');
       
       try {
+        // Pedir permissão da câmera primeiro
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: 'environment' }
         });
         stream.getTracks().forEach(t => t.stop());
         log('✅ Câmera permitida');
         
+        // Iniciar MindAR
         log('🔄 Iniciando MindAR...');
         const mindar = arScene.systems['mindar-image-system'];
+        
         await mindar.start();
         
         log('✅ AR iniciado!');
@@ -237,6 +225,7 @@
     });
     
     log('📱 Página carregada');
+    log('✅ HTTPS: ' + (location.protocol === 'https:'));
   </script>
 </body>
 </html>
